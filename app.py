@@ -2,7 +2,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from retriever import search_assessments
 
-app = FastAPI()
+app = FastAPI(
+    title="SHL Assessment Recommendation Chatbot"
+)
 
 
 # -----------------------------
@@ -18,11 +20,23 @@ class ChatRequest(BaseModel):
 
 
 # -----------------------------
+# Root Endpoint
+# -----------------------------
+@app.get("/")
+def root():
+    return {
+        "message": "SHL chatbot backend is running"
+    }
+
+
+# -----------------------------
 # Health Endpoint
 # -----------------------------
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok"
+    }
 
 
 # -----------------------------
@@ -57,7 +71,7 @@ def chat(request: ChatRequest):
     )
 
     # -----------------------------
-    # Off-topic refusal
+    # Off-topic Refusal
     # -----------------------------
     off_topic_keywords = [
         "salary",
@@ -90,11 +104,10 @@ def chat(request: ChatRequest):
         "done"
     ]
 
-    end_conversation = False
-
-    for word in completion_words:
-        if word in latest_message:
-            end_conversation = True
+    end_conversation = any(
+        word in latest_message
+        for word in completion_words
+    )
 
     if end_conversation:
         return {
